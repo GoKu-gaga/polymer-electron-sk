@@ -1,0 +1,14 @@
+{
+  "name": "polymer-electron-sk",
+  "main": "index.html",
+  "authors": [
+    "goku"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#^1.6.0"
+  },
+  "devDependencies": {
+    "web-component-tester": "^4.0.0"
+  },
+  "private": true
+}

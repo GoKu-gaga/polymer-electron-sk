@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+  <head>
+    <title>my-app test</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+    <script src="../../../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../../bower_components/web-component-tester/browser.js"></script>
+
+    <link rel="import" href="./my-app.html">
+  </head>
+  <body>
+    <test-fixture id="basic">
+      <template>
+        <my-app></my-app>
+      </template>
+    </test-fixture>
+
+    <script>
+      'use strict';
+
+      suite('app test', () => {
+        let app = fixture('basic');
+
+        test('textContent', function() {
+            let text = app.querySelector('div').textContent;
+            assert.equal(text, 'Hello World!');
+        });
+      });
+    </script>'
+  </body>
+</html>
