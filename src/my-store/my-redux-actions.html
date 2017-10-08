@@ -1,0 +1,18 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<script>
+  /**
+   * 该behavior存放着项目的redux-actions对象
+   */
+  Polymer.MyReduxActions = {
+    actions: {
+      updateMessage(message) {
+        return {
+          type: 'UPDATE_MESSAEG',
+          message: message
+        };
+      }
+    }
+  };
+
+</script>

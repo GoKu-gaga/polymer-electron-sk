@@ -1,0 +1,186 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<!--
+`my-rest-settings`
+my-rest设置组件，主要是根据system计算domain以及port,根据type以及urlParams属性计算得到url，method的值。
+
+```html
+<my-rest-settings
+  type="login"
+  system="default"
+  url="{{url}}"
+  url-params="{{urlParams}}"
+  method="{{method}}">
+</my-rest-settings>
+```
+
+@element my-rest-settings
+-->
+
+<dom-module id="my-rest-settings">
+  <template>
+    <style>
+       :host {
+        display: none;
+      }
+    </style>
+
+  </template>
+  <script>
+    Polymer({
+      is: 'my-rest-settings',
+      properties: {
+        /**
+         * 资源系统类型
+         */
+        system: {
+          type: String,
+          value: 'default'
+        },
+        /**
+         * 类型
+         */
+        type: {
+          type: String
+        },
+        /**
+         * 协议
+         */
+        protocol: {
+          type: String,
+          value: 'http://'
+        },
+        /**
+         * 服务器地址
+         */
+        domain: {
+          type: String,
+          computed: '_computeDomain(systemDomains, system)'
+        },
+        /**
+         * 服务器端口
+         */
+        _port: {
+          type: Number,
+          computed: '_computePort(systemPorts, system)'
+        },
+        /**
+         * 服务器url对象
+         */
+        systemDomains: {
+          type: Object,
+          value: {
+            default: '101.200.43.120'
+          }
+        },
+        /**
+         * 服务器端口对象
+         */
+        systemPorts: {
+          type: Object,
+          value: {
+            default: 8120
+          }
+        },
+        /**
+         * 请求参数
+         */
+        urlParams: {
+          type: Object
+        },
+        /**
+         * 请求连接，由protocol,domain,type计算得到
+         */
+        url: {
+          type: String,
+          notify: true,
+          computed: '_computeUrl(protocol, domain, _port, type, urlParams)'
+        },
+        /**
+         * 请求method，由type计算得到
+         */
+        method: {
+          type: String,
+          notify: true,
+          computed: '_computeMethod(type)'
+        },
+        /**
+         * api集合信息
+         */
+        _apis: {
+          type: Object,
+          value: {
+            // 组织机构信息查询
+            test: {
+              url: '/v1/test',
+              method: 'GET'
+            }
+          }
+        }
+      },
+      /**
+       * 计算主机地址
+       * @param {Object} systemDomains 服务各个主机地址存储对象
+       * @param {String} system 系统资源信息
+       * @param {String} 主机信息
+       */
+      _computeDomain(systemDomains, system) {
+        if (systemDomains && system) return systemDomains[system];
+      },
+      /**
+       * 计算端口号
+       * @param {Object} systemPorts 不同系统资源端口信息集合
+       * @param {String} system 当前系统资源信息
+       * @param {Number} 端口号
+       */
+      _computePort(systemPorts, system) {
+        if (systemPorts && system) return systemPorts[system];
+      },
+      /**
+       * 计算url
+       * @param {String} protocol 协议
+       * @param {String} domain 主机地址
+       * @param {Number} port 端口号
+       * @param {String} type 请求类型
+       * @param {Object} urlParams url拼接正则信息对象
+       * @returns {String} 完整的url
+       */
+      _computeUrl(protocol, domain, port, type, urlParams) {
+        if (!protocol || !domain) return '';
+        let _baseUrl = `${protocol}${domain}:${port}`;
+        let _url = _baseUrl + this._getUrlByTypeAndParams(type, urlParams);
+        return _url;
+      },
+      /**
+       * 计算method
+       * @param {String} type 请求类型
+       * @returns {String} 请求方法
+       */
+      _computeMethod(type) {
+        if (type) return this._apis[type].method;
+      },
+      /**
+       * 根据type，url-params计算完整的url
+       * @param {String} type 请求类型
+       * @param {Object} urlParams
+       * @returns {String} 完整的url
+       */
+      _getUrlByTypeAndParams(type, urlParams) {
+        if (!urlParams || typeof urlParams !== 'object') return '';
+
+        let _api = this._apis[type];
+        if (!_api) return '';
+
+        // 判断是否为预设值
+        if (JSON.stringify(urlParams) == '{}') return _api.url;
+
+        let _url = _api.url;
+        for (let key in urlParams) {
+          let _re = new RegExp(`:${key}`, 'g');
+          _url = _url.replace(_re, urlParams[key]);
+        }
+        return _url;
+      }
+    });
+  </script>
+</dom-module>

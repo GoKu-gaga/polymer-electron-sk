@@ -1,7 +1,7 @@
 {
   "plugins": ["html", "eslint-plugin-html"],
   "parserOptions": {
-    "ecmaVersion": 6,
+    "ecmaVersion": 8,
     "sourceType": "module"
   },
   "env": {
@@ -27,9 +27,6 @@
         "allowPattern": "^[a-z]+(_[a-z]+)+$"
       }
     ],
-    "new-cap": ["error", { "capIsNewExceptions": ["Polymer"] }]
-  },
-  "globals": {
-    "Polymer": true
+    "new-cap": ["error", { "capIsNewExceptions": ["Polymer", "PolymerRedux"] }]
   }
 }

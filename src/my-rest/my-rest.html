@@ -1,0 +1,278 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+
+<link rel="import" href="./my-rest-settings.html">
+
+<!--
+`my-rest`
+有关于http请求的组件，通过设置`type`,`body`,`params`等属性，执行`do()`方法发送请求
+
+## example
+
+```html
+<my-rest
+  id="rest"
+  type="login"
+  body="[[userData]]"
+  on-response="handleResponse"
+  on-err="handleErr">
+</my-rest>
+```
+
+@element my-rest
+-->
+
+<dom-module id="my-rest">
+  <template>
+    <style>
+       :host {
+        display: none;
+      }
+    </style>
+
+    <my-rest-settings
+      system="[[system]]"
+      type="[[type]]"
+      url="{{_url}}"
+      url-params="[[urlParams]]"
+      method="{{_method}}">
+    </my-rest-settings>
+
+    <iron-ajax
+      id="ajax"
+      auto="[[auto]]"
+      url="[[_url]]"
+      method="[[_method]]"
+      headers="[[headers]]"
+      body="[[body]]"
+      loading="{{loading}}"
+      params="[[params]]"
+      handle-as="[[handleAs]]"
+      on-response="_handleResponse"
+      content-type="[[contentType]]"
+      on-error="_handleError"
+      debounce-duration="300"
+      last-response="{{lastResponse}}"
+      last-error="{{lastError}}">
+    </iron-ajax>
+
+  </template>
+  <script>
+    Polymer({
+      is: 'my-rest',
+
+      properties: {
+        /**
+         * 是否自动触发请求发送
+         */
+        auto: {
+          type: Boolean,
+          value: false
+        },
+        /**
+         * 资源系统类型
+         */
+        system: {
+          type: String,
+          value: 'default'
+        },
+        /**
+         * 是否自动发送请求
+         */
+        auto: {
+          type: Boolean,
+          value: false
+        },
+        /**
+         * 请求连接，my-rest-setting计算得到
+         */
+        _url: {
+          type: String
+        },
+        /**
+         * 请求method，my-rest-setting计算得到
+         */
+        _method: {
+          type: String
+        },
+        /**
+         * content-type设置
+         */
+        contentType: {
+          type: String,
+          value: 'application/json'
+        },
+        /**
+         * 请求地址正则参数
+         */
+        urlParams: {
+          type: Object,
+          value: {}
+        },
+        /**
+         * 请求参数
+         */
+        params: {
+          type: Object
+        },
+        /**
+         * 请求头部信息
+         */
+        headers: {
+          type: Object
+        },
+        /**
+         * 是否需要添加token
+         */
+        tokenIsNeeded: {
+          type: Boolean,
+          value: false
+        },
+        /**
+         * 请求主体信息
+         */
+        body: {
+          type: Object
+        },
+        /**
+         * 请求是否仍处于处理状态
+         */
+        loading: {
+          type: Boolean,
+          notify: true,
+          value: false
+        },
+        /**
+         * 请求内容处理格式
+         */
+        handleAs: {
+          type: String,
+          value: 'json'
+        },
+        /**
+         * 请求类型
+         */
+        type: {
+          type: String
+        },
+        /**
+         * 上一次请求成功得到的数据
+         */
+        lastResponse: {
+          type: Object,
+          notify: true
+        },
+        /**
+         * 上一次请求失败得到的数据
+         */
+        lastError: {
+          type: Object,
+          notify: true
+        },
+        /**
+         * 请求返回状态码
+         */
+        statusCode: {
+          type: Number,
+          notify: true,
+          computed: '_updateStatusCode(lastError)'
+        },
+        /**
+         * 内部错误信息对象
+         */
+        _errorMessages: {
+          type: Object,
+          value: {
+            0: '网络连接错误，请检查',
+            401: '操作权限不足',
+            404: '请求链接不存在',
+            500: '服务器内部错误'
+          }
+        },
+        /**
+         * 外部错误信息对象，其会对内部错误信息对象`_errorMessages`进行修改或补充
+         */
+        errorMessages: {
+          type: Object,
+          observer: '_updateErrorMessages'
+        },
+        /**
+         * 请求错误反馈信息
+         */
+        errorMessage: {
+          type: String,
+          notify: true,
+          computed: '_computeErrormessage(statusCode)'
+        },
+        /**
+         * 身份验证token
+         */
+        token: {
+          type: String,
+          value: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE1MDU4MDc5NTksImlzcyI6IjAwNjI1NzkxIn0.cuKJdXcXj1bW7XE1Dv7W-_4yv-_ST01GRwk1ZHNfUiY'
+        }
+      },
+
+      /**
+       * 处理成功请求，冒泡事件
+       * @event response
+       */
+      _handleResponse(e) {
+        this.fire('response', e, { bubbles: false });
+      },
+
+      /**
+       * 处理错误请求，冒泡事件
+       * @event error
+       */
+      _handleError(e) {
+        this.fire('error', e, { bubbles: false });
+      },
+
+      /**
+       * 根据lastError更新状态码
+       */
+      _updateStatusCode(lastError) {
+        return lastError ? lastError.request.status : undefined;
+      },
+
+      /**
+       * 更新内部错误信息对象
+       */
+      _updateErrorMessages(errMsg) {
+        if (!errMsg) {
+          return;
+        }
+        let _errorMessages = this._errorMessages;
+        for (let statusCode in errMsg) {
+          if (errMsg.hasOwnProperty(statusCode)) {
+            _errorMessages[statusCode] = errMsg[statusCode];
+          }
+        }
+      },
+
+      /**
+       * 计算请求错误反馈信息
+       */
+      _computeErrormessage(statusCode) {
+        if (statusCode !== 0 && !statusCode) {
+          return;
+        }
+        return this._errorMessages[statusCode];
+      },
+
+      /**
+       * 发送请求
+       */
+      do() {
+        // 判断是否需要token
+        if (this.tokenIsNeeded && this.token) {
+          let _headers = this.headers ? this.headers : {};
+          _headers.Authorization = this.token;
+          this.headers = _headers;
+        }
+        this.$.ajax.generateRequest();
+      }
+    });
+  </script>
+</dom-module>
